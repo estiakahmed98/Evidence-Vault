@@ -1,6 +1,5 @@
 # Evidence Vault
 
-<img width="1920" height="1129" alt="Evidence Vault Home" src="https://github.com/user-attachments/assets/a3799d5f-5e79-47f6-8b65-09e53492ecb2" />
 <img width="1920" height="1129" alt="Vault Page" src="https://github.com/user-attachments/assets/edcea601-a53d-47d8-8dd9-8a4e5702439e" />
 <img width="1920" height="1267" alt="Vault ID Page" src="https://github.com/user-attachments/assets/660a9edb-d898-4775-8b8c-2ad81106d510" />
 <img width="1920" height="1300" alt="Request Buyer" src="https://github.com/user-attachments/assets/b5dbbf4a-7dbf-42ca-bd51-984d9426ef30" />
