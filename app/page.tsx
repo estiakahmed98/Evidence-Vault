@@ -219,16 +219,6 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Security Badge Section */}
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 px-6 py-3 rounded-full shadow-lg border border-slate-200 dark:border-slate-700">
-              <Lock className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                Enterprise-grade security with SOC 2 Type II compliance
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </main>
