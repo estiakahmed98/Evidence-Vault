@@ -1,19 +1,37 @@
-"use client"
+"use client";
 
-import { Suspense, useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { StatusChip } from "@/components/status-chip"
-import { Modal } from "@/components/modal"
-import { DataTable } from "@/components/data-table"
-import { Skeleton } from "@/components/ui/skeleton"
-import { buyerRequestsData, evidenceVaultData, type BuyerRequest } from "@/lib/mock-data"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ChevronLeft } from "lucide-react"
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { StatusChip } from "@/components/status-chip";
+import { Modal } from "@/components/modal";
+import { DataTable } from "@/components/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  buyerRequestsData,
+  evidenceVaultData,
+  type BuyerRequest,
+} from "@/lib/mock-data";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ChevronLeft, FilePlus, Vault } from "lucide-react";
+import { type ColumnDef } from "@tanstack/react-table";
+import { Input } from "@/components/ui/input";
 
 function RequestsSkeletonLoader() {
   return (
@@ -27,7 +45,10 @@ function RequestsSkeletonLoader() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg"
+            >
               <div className="flex items-center justify-between mb-4">
                 <Skeleton className="w-8 h-8" />
                 <Skeleton className="h-6 w-16 rounded-full" />
@@ -60,31 +81,44 @@ function RequestsSkeletonLoader() {
         </Card>
       </div>
     </main>
-  )
+  );
 }
 
 function RequestsContent() {
-  const [requests, setRequests] = useState(buyerRequestsData)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
-  const [fulfillMode, setFulfillMode] = useState<"existing" | "new">("existing")
-  const [selectedEvidence, setSelectedEvidence] = useState<string>("")
+  const [requests, setRequests] = useState(buyerRequestsData);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
+    null
+  );
+  const [fulfillMode, setFulfillMode] = useState<"existing" | "new">(
+    "existing"
+  );
+  const [selectedEvidence, setSelectedEvidence] = useState<string>("");
+  const [isNewRequestModalOpen, setIsNewRequestModalOpen] = useState(false);
+  const [newRequest, setNewRequest] = useState({
+    docType: "Certificate" as BuyerRequest["docType"],
+    dueDate: "",
+  });
 
-  const selectedRequest = requests.find((r) => r.id === selectedRequestId)
+  const selectedRequest = requests.find((r) => r.id === selectedRequestId);
   const statusCounts = requests.reduce<Record<string, number>>((acc, req) => {
-    acc[req.status] = (acc[req.status] ?? 0) + 1
-    return acc
-  }, {})
-  const totalRequests = requests.length
-  const fulfilledCount = statusCounts["Fulfilled"] ?? 0
-  const completionRate = totalRequests ? Math.round((fulfilledCount / totalRequests) * 100) : 0
+    acc[req.status] = (acc[req.status] ?? 0) + 1;
+    return acc;
+  }, {});
+  const totalRequests = requests.length;
+  const fulfilledCount = statusCounts["Fulfilled"] ?? 0;
+  const completionRate = totalRequests
+    ? Math.round((fulfilledCount / totalRequests) * 100)
+    : 0;
   const nextDueRequest =
     requests.length === 0
       ? null
       : requests.reduce<BuyerRequest | null>((closest, req) => {
-          if (!closest) return req
-          return new Date(req.dueDate) < new Date(closest.dueDate) ? req : closest
-        }, null)
+          if (!closest) return req;
+          return new Date(req.dueDate) < new Date(closest.dueDate)
+            ? req
+            : closest;
+        }, null);
   const heroHighlights = [
     {
       label: "Fulfillment Rate",
@@ -103,58 +137,90 @@ function RequestsContent() {
     },
     {
       label: "Next Due",
-      value: nextDueRequest ? new Date(nextDueRequest.dueDate).toLocaleDateString() : "N/A",
+      value: nextDueRequest
+        ? new Date(nextDueRequest.dueDate).toLocaleDateString()
+        : "N/A",
       description: nextDueRequest ? nextDueRequest.docType : "No active tasks",
     },
-  ]
+  ];
 
   const handleFulfill = () => {
-    if (!selectedRequestId) return
+    if (!selectedRequestId) return;
 
-    setRequests((prev) => prev.map((req) => (req.id === selectedRequestId ? { ...req, status: "Fulfilled" } : req)))
+    setRequests((prev) =>
+      prev.map((req) =>
+        req.id === selectedRequestId ? { ...req, status: "Fulfilled" } : req
+      )
+    );
 
-    setIsModalOpen(false)
-    setSelectedRequestId(null)
-    setFulfillMode("existing")
-    setSelectedEvidence("")
-  }
+    setIsModalOpen(false);
+    setSelectedRequestId(null);
+    setFulfillMode("existing");
+    setSelectedEvidence("");
+  };
+
+  const handleAddNewRequest = () => {
+    if (!newRequest.dueDate) return;
+
+    const request: BuyerRequest = {
+      id: Date.now().toString(),
+      docType: newRequest.docType,
+      dueDate: newRequest.dueDate,
+      status: "Pending",
+    };
+
+    setRequests((prev) => [...prev, request]);
+    setIsNewRequestModalOpen(false);
+    setNewRequest({
+      docType: "Certificate",
+      dueDate: "",
+    });
+  };
 
   const openFulfillModal = (requestId: string) => {
-    setSelectedRequestId(requestId)
-    setIsModalOpen(true)
-  }
+    setSelectedRequestId(requestId);
+    setIsModalOpen(true);
+  };
 
-  const columns = [
+  const columns: ColumnDef<BuyerRequest>[] = [
     {
-      id: "docType",
+      accessorKey: "docType",
       header: "Document Type",
-      cell: (row: BuyerRequest) => row.docType,
+      cell: (row) => row.getValue(),
     },
     {
-      id: "dueDate",
+      accessorKey: "dueDate",
       header: "Due Date",
-      cell: (row: BuyerRequest) => new Date(row.dueDate).toLocaleDateString(),
+      cell: (row) => new Date(row.getValue() as string).toLocaleDateString(),
     },
     {
-      id: "status",
+      accessorKey: "status",
       header: "Status",
-      cell: (row: BuyerRequest) => <StatusChip status={row.status} />,
+      cell: (row) => (
+        <StatusChip status={row.getValue() as BuyerRequest["status"]} />
+      ),
     },
     {
       id: "actions",
       header: "Actions",
-      cell: (row: BuyerRequest) =>
-        row.status !== "Fulfilled" ? (
-          <Button variant="outline" size="sm" onClick={() => openFulfillModal(row.id)}>
+      cell: ({ row }) =>
+        row.original.status !== "Fulfilled" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => openFulfillModal(row.original.id)}
+          >
             Fulfill
           </Button>
         ) : (
           <span className="text-sm text-muted-foreground">Completed</span>
         ),
     },
-  ]
+  ];
 
-  const relevantEvidence = selectedRequest ? evidenceVaultData.filter((e) => e.type === selectedRequest.docType) : []
+  const relevantEvidence = selectedRequest
+    ? evidenceVaultData.filter((e) => e.type === selectedRequest.docType)
+    : [];
 
   return (
     <main className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50">
@@ -168,28 +234,55 @@ function RequestsContent() {
                   Back to Home
                 </Button>
               </Link>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">Evidence Vault</p>
-              <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">Buyer Requests</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">
+                Evidence Vault
+              </p>
+              <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">
+                Buyer Requests
+              </h1>
               <p className="mt-2 max-w-2xl text-base text-slate-600">
-                Surface every buyer request, understand where things stand today, and accelerate fulfillment with
-                vault.
+                Surface every buyer request, understand where things stand
+                today, and accelerate fulfillment with vault.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button variant="secondary" size="sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors duration-200"
+                onClick={() => setIsNewRequestModalOpen(true)}
+              >
+                <FilePlus className="w-4 h-4" />
                 New Request
               </Button>
-              <Button variant="outline" size="sm" className="border-slate-300 text-slate-700">
-                View Vault
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors duration-200"
+              >
+                <Link href="/vault">
+                  <Vault className="w-4 h-4" />
+                  View Vault
+                </Link>
               </Button>
             </div>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {heroHighlights.map((highlight) => (
-              <div key={highlight.label} className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">{highlight.label}</p>
-                <p className="text-3xl font-semibold text-slate-900">{highlight.value}</p>
-                <p className="text-sm text-slate-600">{highlight.description}</p>
+              <div
+                key={highlight.label}
+                className="rounded-2xl border border-slate-200 bg-white p-4"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">
+                  {highlight.label}
+                </p>
+                <p className="text-3xl font-semibold text-slate-900">
+                  {highlight.value}
+                </p>
+                <p className="text-sm text-slate-600">
+                  {highlight.description}
+                </p>
               </div>
             ))}
           </div>
@@ -199,7 +292,9 @@ function RequestsContent() {
           <Card className="border border-slate-200 bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="text-slate-900">Pending Requests</CardTitle>
-              <CardDescription className="text-slate-600">All active buyer document requests</CardDescription>
+              <CardDescription className="text-slate-600">
+                All active buyer document requests
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-slate-700">
               <DataTable columns={columns} data={requests} rowKey="id" />
@@ -209,15 +304,27 @@ function RequestsContent() {
           <Card className="border border-slate-200 bg-white shadow-lg">
             <CardHeader>
               <CardTitle className="text-slate-900">Vault Snapshot</CardTitle>
-              <CardDescription className="text-slate-600">Fast glance at evidence you can link</CardDescription>
+              <CardDescription className="text-slate-600">
+                Fast glance at evidence you can link
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-slate-700">
               {evidenceVaultData.slice(0, 3).map((evidence) => (
-                <div key={evidence.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div
+                  key={evidence.id}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">{evidence.type}</p>
-                    <p className="text-base font-semibold text-slate-900">{evidence.name}</p>
-                    <p className="text-xs text-slate-600">Updated {new Date(evidence.lastUpdated).toLocaleDateString()}</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-600">
+                      {evidence.type}
+                    </p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {evidence.name}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      Updated{" "}
+                      {new Date(evidence.lastUpdated).toLocaleDateString()}
+                    </p>
                   </div>
                   <span className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-green-700">
                     {evidence.status}
@@ -232,17 +339,31 @@ function RequestsContent() {
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
           title="Fulfill Request"
-          description={selectedRequest ? `Fulfill request for ${selectedRequest.docType}` : undefined}
+          description={
+            selectedRequest
+              ? `Fulfill request for ${selectedRequest.docType}`
+              : undefined
+          }
           submitLabel="Submit"
           onSubmit={handleFulfill}
         >
           <div className="space-y-6">
             <div>
-              <Label className="text-sm font-medium mb-3 block">How would you like to fulfill this request?</Label>
-              <RadioGroup value={fulfillMode} onValueChange={(value) => setFulfillMode(value as "existing" | "new")}>
+              <Label className="text-sm font-medium mb-3 block">
+                How would you like to fulfill this request?
+              </Label>
+              <RadioGroup
+                value={fulfillMode}
+                onValueChange={(value) =>
+                  setFulfillMode(value as "existing" | "new")
+                }
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="existing" id="existing" />
-                  <Label htmlFor="existing" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="existing"
+                    className="font-medium cursor-pointer"
+                  >
                     Select existing evidence from vault
                   </Label>
                 </div>
@@ -257,10 +378,16 @@ function RequestsContent() {
 
             {fulfillMode === "existing" && (
               <div>
-                <Label htmlFor="evidence-select" className="text-sm font-medium">
+                <Label
+                  htmlFor="evidence-select"
+                  className="text-sm font-medium"
+                >
                   Select Evidence
                 </Label>
-                <Select value={selectedEvidence} onValueChange={setSelectedEvidence}>
+                <Select
+                  value={selectedEvidence}
+                  onValueChange={setSelectedEvidence}
+                >
                   <SelectTrigger id="evidence-select">
                     <SelectValue placeholder="Choose evidence..." />
                   </SelectTrigger>
@@ -273,7 +400,9 @@ function RequestsContent() {
                   </SelectContent>
                 </Select>
                 {relevantEvidence.length === 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">No matching evidence found in vault</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    No matching evidence found in vault
+                  </p>
                 )}
               </div>
             )}
@@ -292,18 +421,76 @@ function RequestsContent() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="new-doc-notes" className="text-sm font-medium">
+                  <Label
+                    htmlFor="new-doc-notes"
+                    className="text-sm font-medium"
+                  >
                     Notes
                   </Label>
-                  <Textarea id="new-doc-notes" placeholder="Enter notes..." rows={3} />
+                  <Textarea
+                    id="new-doc-notes"
+                    placeholder="Enter notes..."
+                    rows={3}
+                  />
                 </div>
               </div>
             )}
           </div>
         </Modal>
+
+        <Modal
+          open={isNewRequestModalOpen}
+          onOpenChange={setIsNewRequestModalOpen}
+          title="Create New Request"
+          description="Add a new buyer document request"
+          submitLabel="Create Request"
+          onSubmit={handleAddNewRequest}
+        >
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="doc-type" className="text-sm font-medium">
+                Document Type
+              </Label>
+              <Select
+                value={newRequest.docType}
+                onValueChange={(value) =>
+                  setNewRequest((prev) => ({
+                    ...prev,
+                    docType: value as BuyerRequest["docType"],
+                  }))
+                }
+              >
+                <SelectTrigger id="doc-type">
+                  <SelectValue placeholder="Select document type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Certificate">Certificate</SelectItem>
+                  <SelectItem value="License">License</SelectItem>
+                  <SelectItem value="Report">Report</SelectItem>
+                  <SelectItem value="Document">Document</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="due-date" className="text-sm font-medium">
+                Due Date
+              </Label>
+              <Input
+                id="due-date"
+                type="date"
+                value={newRequest.dueDate}
+                onChange={(e) =>
+                  setNewRequest((prev) => ({ ...prev, dueDate: e.target.value }))
+                }
+                placeholder="Select due date..."
+              />
+            </div>
+          </div>
+        </Modal>
       </div>
     </main>
-  )
+  );
 }
 
 export default function RequestsPage() {
@@ -311,5 +498,5 @@ export default function RequestsPage() {
     <Suspense fallback={<RequestsSkeletonLoader />}>
       <RequestsContent />
     </Suspense>
-  )
+  );
 }

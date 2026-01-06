@@ -17,8 +17,11 @@ import { DataTable } from "@/components/data-table";
 import { StatusChip } from "@/components/status-chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/modal";
+import { Label } from "@/components/ui/label";
 import { evidenceVaultData, type Evidence } from "@/lib/mock-data";
 import { ChevronRight, Filter, FileText, Home, FolderPlus } from "lucide-react";
+import { type ColumnDef } from "@tanstack/react-table";
 
 function VaultSkeletonLoader() {
   return (
@@ -92,6 +95,14 @@ function VaultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [isNewDocumentModalOpen, setIsNewDocumentModalOpen] = useState(false);
+  const [newDocument, setNewDocument] = useState({
+    name: "",
+    type: "Certificate" as Evidence["type"],
+    status: "Active" as Evidence["status"],
+    expiryDate: "",
+  });
+  const [documents, setDocuments] = useState(evidenceVaultData);
 
   const docTypeFilter = searchParams.get("type") || "all";
   const statusFilter = searchParams.get("status") || "all";
@@ -99,7 +110,7 @@ function VaultContent() {
   const searchQuery = searchParams.get("search") || "";
 
   const filteredData = useMemo(() => {
-    return evidenceVaultData.filter((item) => {
+    return documents.filter((item) => {
       const matchesType =
         docTypeFilter === "all" || item.type === docTypeFilter;
       const matchesStatus =
@@ -117,7 +128,30 @@ function VaultContent() {
 
       return matchesType && matchesStatus && matchesSearch && matchesExpiry;
     });
-  }, [docTypeFilter, statusFilter, expiryFilter, searchQuery]);
+  }, [docTypeFilter, statusFilter, expiryFilter, searchQuery, documents]);
+
+  const handleAddNewDocument = () => {
+    if (!newDocument.name || !newDocument.expiryDate) return;
+
+    const document: Evidence = {
+      id: Date.now().toString(),
+      name: newDocument.name,
+      type: newDocument.type,
+      status: newDocument.status,
+      expiryDate: newDocument.expiryDate,
+      versionsCount: 1,
+      lastUpdated: new Date().toISOString().split("T")[0],
+    };
+
+    setDocuments((prev) => [...prev, document]);
+    setIsNewDocumentModalOpen(false);
+    setNewDocument({
+      name: "",
+      type: "Certificate",
+      status: "Active",
+      expiryDate: "",
+    });
+  };
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -129,42 +163,44 @@ function VaultContent() {
     router.push(`/vault?${params.toString()}`);
   };
 
-  const columns = [
+  const columns: ColumnDef<Evidence>[] = [
     {
-      id: "name",
+      accessorKey: "name",
       header: "Doc Name",
-      cell: (row: Evidence) => row.name,
+      cell: (row) => row.getValue(),
     },
     {
-      id: "type",
+      accessorKey: "type",
       header: "Doc Type",
-      cell: (row: Evidence) => row.type,
+      cell: (row) => row.getValue(),
     },
     {
-      id: "status",
+      accessorKey: "status",
       header: "Status",
-      cell: (row: Evidence) => <StatusChip status={row.status} />,
+      cell: (row) => (
+        <StatusChip status={row.getValue() as Evidence["status"]} />
+      ),
     },
     {
-      id: "expiryDate",
+      accessorKey: "expiryDate",
       header: "Expiry Date",
-      cell: (row: Evidence) => new Date(row.expiryDate).toLocaleDateString(),
+      cell: (row) => new Date(row.getValue() as string).toLocaleDateString(),
     },
     {
-      id: "versionsCount",
+      accessorKey: "versionsCount",
       header: "Versions",
-      cell: (row: Evidence) => row.versionsCount,
+      cell: (row) => row.getValue(),
     },
     {
-      id: "lastUpdated",
+      accessorKey: "lastUpdated",
       header: "Last Updated",
-      cell: (row: Evidence) => new Date(row.lastUpdated).toLocaleDateString(),
+      cell: (row) => new Date(row.getValue() as string).toLocaleDateString(),
     },
     {
       id: "actions",
       header: "Actions",
-      cell: (row: Evidence) => (
-        <Link href={`/vault/${row.id}`}>
+      cell: ({ row }) => (
+        <Link href={`/vault/${row.original.id}`}>
           <Button variant="ghost" size="sm" className="gap-1">
             View
             <ChevronRight className="w-4 h-4" />
@@ -223,6 +259,7 @@ function VaultContent() {
                 variant="secondary"
                 size="sm"
                 className="gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors duration-200"
+                onClick={() => setIsNewDocumentModalOpen(true)}
               >
                 <FolderPlus className="w-4 h-4" />
                 Add New Document
@@ -316,48 +353,52 @@ function VaultContent() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Document Type
-                </label>
-                <Select
-                  value={docTypeFilter}
-                  onValueChange={(value) => updateFilter("type", value)}
-                >
-                  <SelectTrigger className="border-slate-300 bg-white text-slate-900">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Certificate">Certificate</SelectItem>
-                    <SelectItem value="License">License</SelectItem>
-                    <SelectItem value="Report">Report</SelectItem>
-                    <SelectItem value="Document">Document</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Document Type
+                  </label>
+                  <Select
+                    value={docTypeFilter}
+                    onValueChange={(value) => updateFilter("type", value)}
+                  >
+                    <SelectTrigger className="border-slate-300 bg-white text-slate-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="Certificate">Certificate</SelectItem>
+                      <SelectItem value="License">License</SelectItem>
+                      <SelectItem value="Report">Report</SelectItem>
+                      <SelectItem value="Document">Document</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Status
-                </label>
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) => updateFilter("status", value)}
-                >
-                  <SelectTrigger className="border-slate-300 bg-white text-slate-900">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Expiring Soon">Expiring Soon</SelectItem>
-                    <SelectItem value="Expired">Expired</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Status
+                  </label>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => updateFilter("status", value)}
+                  >
+                    <SelectTrigger className="border-slate-300 bg-white text-slate-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Expiring Soon">
+                        Expiring Soon
+                      </SelectItem>
+                      <SelectItem value="Expired">Expired</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-
+              
               <div>
                 <label className="text-sm font-semibold text-slate-700">
                   Expiry
@@ -422,6 +463,100 @@ function VaultContent() {
             />
           </CardContent>
         </Card>
+
+        <Modal
+          open={isNewDocumentModalOpen}
+          onOpenChange={setIsNewDocumentModalOpen}
+          title="Add New Document"
+          description="Add a new document to the evidence vault"
+          submitLabel="Add Document"
+          onSubmit={handleAddNewDocument}
+        >
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="doc-name" className="text-sm font-medium">
+                Document Name
+              </Label>
+              <Input
+                id="doc-name"
+                type="text"
+                value={newDocument.name}
+                onChange={(e) =>
+                  setNewDocument((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Enter document name..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="doc-type" className="text-sm font-medium">
+                Document Type
+              </Label>
+              <Select
+                value={newDocument.type}
+                onValueChange={(value) =>
+                  setNewDocument((prev) => ({
+                    ...prev,
+                    type: value as Evidence["type"],
+                  }))
+                }
+              >
+                <SelectTrigger id="doc-type">
+                  <SelectValue placeholder="Select document type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Certificate">Certificate</SelectItem>
+                  <SelectItem value="License">License</SelectItem>
+                  <SelectItem value="Report">Report</SelectItem>
+                  <SelectItem value="Document">Document</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="doc-status" className="text-sm font-medium">
+                Status
+              </Label>
+              <Select
+                value={newDocument.status}
+                onValueChange={(value) =>
+                  setNewDocument((prev) => ({
+                    ...prev,
+                    status: value as Evidence["status"],
+                  }))
+                }
+              >
+                <SelectTrigger id="doc-status">
+                  <SelectValue placeholder="Select status..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Expiring Soon">Expiring Soon</SelectItem>
+                  <SelectItem value="Expired">Expired</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="expiry-date" className="text-sm font-medium">
+                Expiry Date
+              </Label>
+              <Input
+                id="expiry-date"
+                type="date"
+                value={newDocument.expiryDate}
+                onChange={(e) =>
+                  setNewDocument((prev) => ({
+                    ...prev,
+                    expiryDate: e.target.value,
+                  }))
+                }
+                placeholder="Select expiry date..."
+              />
+            </div>
+          </div>
+        </Modal>
       </div>
     </main>
   );

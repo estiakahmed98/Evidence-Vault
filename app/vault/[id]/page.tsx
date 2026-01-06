@@ -15,10 +15,11 @@ import {
   versionHistoryData,
   type EvidenceVersion,
 } from "@/lib/mock-data";
-import { ChevronLeft, Home, Upload } from "lucide-react";
+import { ChevronLeft, Home, Upload, Vault } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { type ColumnDef } from "@tanstack/react-table";
 
 const uploadVersionSchema = z.object({
   notes: z.string().min(1, "Notes are required"),
@@ -121,33 +122,33 @@ export default function EvidenceDetailPage({
     );
   }
 
-  const versionColumns = [
+  const versionColumns: ColumnDef<EvidenceVersion>[] = [
     {
-      id: "version",
+      accessorKey: "version",
       header: "Version",
-      cell: (row: EvidenceVersion) => (
-        <span className="font-mono font-semibold">{row.version}</span>
+      cell: (row) => (
+        <span className="font-mono font-semibold">{row.getValue() as string}</span>
       ),
     },
     {
-      id: "uploader",
+      accessorKey: "uploader",
       header: "Uploader",
-      cell: (row: EvidenceVersion) => row.uploader,
+      cell: (row) => row.getValue() as string,
     },
     {
-      id: "date",
+      accessorKey: "date",
       header: "Date",
-      cell: (row: EvidenceVersion) => new Date(row.date).toLocaleDateString(),
+      cell: (row) => new Date(row.getValue() as string).toLocaleDateString(),
     },
     {
-      id: "notes",
+      accessorKey: "notes",
       header: "Notes",
-      cell: (row: EvidenceVersion) => row.notes,
+      cell: (row) => row.getValue() as string,
     },
     {
-      id: "fileSize",
+      accessorKey: "fileSize",
       header: "File Size",
-      cell: (row: EvidenceVersion) => row.fileSize,
+      cell: (row) => row.getValue() as string,
     },
   ];
 
@@ -173,7 +174,7 @@ export default function EvidenceDetailPage({
                 className="gap-2 text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors duration-200"
               >
                 <Link href="/vault">
-                  <ChevronLeft className="w-4 h-4" />
+                  <Vault className="w-4 h-4" />
                   Back to Vault
                 </Link>
               </Button>

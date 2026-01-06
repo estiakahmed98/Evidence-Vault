@@ -1,18 +1,23 @@
 "use client"
 
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type ColumnFiltersState,
+} from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from "react"
 import type { ReactNode } from "react"
 
-interface Column<T> {
-  id: keyof T | string
-  header: string
-  cell: (row: T) => ReactNode
-  width?: string
-}
-
 interface DataTableProps<T> {
-  columns: Column<T>[]
+  columns: ColumnDef<T>[]
   data: T[]
   selectedRows?: Set<string>
   onSelectedRowsChange?: (selected: Set<string>) => void
@@ -26,6 +31,24 @@ export function DataTable<T>({
   onSelectedRowsChange,
   rowKey,
 }: DataTableProps<T>) {
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    state: {
+      sorting,
+      columnFilters,
+    },
+  })
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const newSelected = new Set(data.map((row) => String(row[rowKey as keyof T])))
@@ -54,18 +77,48 @@ export function DataTable<T>({
           <TableRow className="bg-muted">
             {onSelectedRowsChange && (
               <TableHead className="w-12">
-                <Checkbox checked={isAllSelected} onCheckedChange={handleSelectAll} aria-label="Select all rows" />
+                <Checkbox 
+                  checked={isAllSelected} 
+                  onCheckedChange={handleSelectAll} 
+                  aria-label="Select all rows" 
+                />
               </TableHead>
             )}
-            {columns.map((column) => (
-              <TableHead key={String(column.id)} style={{ width: column.width }}>
-                {column.header}
+            {table.getFlatHeaders().map((header) => (
+              <TableHead key={header.id} style={{ width: header.getSize() }}>
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.length === 0 ? (
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {onSelectedRowsChange && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedRows.has(String(row.original[rowKey as keyof T]))}
+                      onCheckedChange={(checked) => handleSelectRow(Boolean(checked), String(row.original[rowKey as keyof T]))}
+                    />
+                  </TableCell>
+                )}
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
             <TableRow>
               <TableCell
                 colSpan={columns.length + (onSelectedRowsChange ? 1 : 0)}
@@ -74,22 +127,6 @@ export function DataTable<T>({
                 No data available
               </TableCell>
             </TableRow>
-          ) : (
-            data.map((row) => (
-              <TableRow key={String(row[rowKey as keyof T])}>
-                {onSelectedRowsChange && (
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedRows.has(String(row[rowKey as keyof T]))}
-                      onCheckedChange={(checked) => handleSelectRow(Boolean(checked), String(row[rowKey as keyof T]))}
-                    />
-                  </TableCell>
-                )}
-                {columns.map((column) => (
-                  <TableCell key={String(column.id)}>{column.cell(row)}</TableCell>
-                ))}
-              </TableRow>
-            ))
           )}
         </TableBody>
       </Table>

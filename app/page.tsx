@@ -1,78 +1,123 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Shield, 
-  FileText, 
-  Users, 
-  TrendingUp, 
-  CheckCircle, 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Shield,
+  FileText,
+  Users,
+  TrendingUp,
+  CheckCircle,
   ArrowRight,
   Lock,
   FolderOpen,
-  Bell
-} from "lucide-react"
+  Bell,
+} from "lucide-react";
 
 export const metadata = {
   title: "Evidence Vault - Compliance Management Platform",
   description: "Professional compliance management system for factory users",
-}
+};
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="p-8">
+        <div className="p-4">
           {/* Header Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-6">
-              <Shield className="w-8 h-8 text-white" />
+          <header className="flex flex-col items-center max-w-2xl mx-auto text-center mb-20">
+            {/* Icon with subtle glow */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 rounded-full"></div>
+              <div className="relative inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl rotate-3 shadow-lg shadow-blue-200 dark:shadow-none transition-transform hover:rotate-0 duration-300">
+                <Shield className="w-7 h-7 text-white" />
+              </div>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold bg-linear-to-r from-slate-900 to-blue-600 bg-clip-text text-transparent mb-6">
-              Evidence Vault
-            </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-2xl mx-auto leading-relaxed">
-              Professional compliance management platform for factory users
-            </p>
-            <p className="text-lg text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-              Streamline your evidence management, document organization, and buyer request fulfillment
-            </p>
-          </div>
+
+            {/* Typography Wrapper */}
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                Evidence{" "}
+                <span className="bg-linear-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
+                  Vault
+                </span>
+              </h1>
+
+              <div className="flex flex-col items-center gap-3">
+                <span className="px-3 py-1 text-xs font-semibold tracking-wider text-blue-700 uppercase bg-blue-50 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
+                  Enterprise Compliance
+                </span>
+                <p className="text-lg text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
+                  Securely manage factory compliance and regulatory
+                  documentation in one unified platform.
+                </p>
+              </div>
+            </div>
+
+            {/* Professional Divider */}
+            <div className="w-12 h-1 bg-blue-600 rounded-full mt-8 opacity-20"></div>
+          </header>
 
           {/* Stats Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <FileText className="w-8 h-8 text-blue-600" />
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                >
                   Active
                 </Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">2,847</h3>
-              <p className="text-slate-600 dark:text-slate-300">Documents Managed</p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                2,847
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300">
+                Documents Managed
+              </p>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 text-green-600" />
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                >
                   Verified
                 </Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">124</h3>
-              <p className="text-slate-600 dark:text-slate-300">Active Buyers</p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                124
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300">
+                Active Buyers
+              </p>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <TrendingUp className="w-8 h-8 text-purple-600" />
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                >
                   Growing
                 </Badge>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">98.5%</h3>
-              <p className="text-slate-600 dark:text-slate-300">Compliance Rate</p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                98.5%
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300">
+                Compliance Rate
+              </p>
             </div>
           </div>
 
@@ -90,26 +135,36 @@ export default function HomePage() {
                   Evidence Vault
                 </CardTitle>
                 <CardDescription className="text-slate-600 dark:text-slate-300 text-base">
-                  Securely manage, organize, and track all your compliance documents and evidence in one centralized location
+                  Securely manage, organize, and track all your compliance
+                  documents and evidence in one centralized location
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Advanced document encryption</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Advanced document encryption
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Real-time collaboration</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Real-time collaboration
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Automated compliance checks</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Automated compliance checks
+                    </span>
                   </div>
                 </div>
                 <Link href="/vault">
-                  <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                  <Button
+                    size="lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  >
                     Access Evidence Vault
                   </Button>
                 </Link>
@@ -128,26 +183,36 @@ export default function HomePage() {
                   Buyer Requests
                 </CardTitle>
                 <CardDescription className="text-slate-600 dark:text-slate-300 text-base">
-                  Efficiently manage and fulfill buyer document requests with automated workflows and notifications
+                  Efficiently manage and fulfill buyer document requests with
+                  automated workflows and notifications
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Priority request management</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Priority request management
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Automated notifications</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Automated notifications
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">Request tracking dashboard</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      Request tracking dashboard
+                    </span>
                   </div>
                 </div>
                 <Link href="/requests">
-                  <Button size="lg" className="w-full bg-green-600 hover:bg-green-700 text-white font-medium">
+                  <Button
+                    size="lg"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
+                  >
                     View Requests
                   </Button>
                 </Link>
@@ -167,5 +232,5 @@ export default function HomePage() {
         </div>
       </div>
     </main>
-  )
+  );
 }
