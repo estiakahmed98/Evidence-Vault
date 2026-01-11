@@ -71,6 +71,49 @@ npm run lint
 - Forms leverage React Hook Form + Zod (`app/vault/[id]/page.tsx`) to validate uploads and keep UI error messages consistent.
 - `DataTable` uses TanStack Table for sorting/filtering/pagination; adjust `versionColumns` or `columns` in the pages to change table behavior.
 
+## Phase A Thin Slice (BB)
+
+This repo includes a minimal, mocked request workflow + pack export stub using Next.js route handlers.
+
+### Mini Design Doc + Risks
+
+- `docs/phase-a-mini-design-doc.md`
+- `docs/top-3-risks.md`
+- `docs/change-request.md`
+
+### API Endpoints (mocked)
+
+Request workflow:
+
+- `POST /api/requests` create buyer request
+- `GET /api/requests?factoryId=...` list factory requests
+- `POST /api/requests/:id/fulfill` fulfill with evidence + version IDs
+- `GET /api/buyer/requests?buyerId=...` buyer checks status
+- `GET /api/buyer/evidence/:id?buyerId=...` buyer accesses shared evidence versions
+
+Pack export stub:
+
+- `POST /api/packs` create pack and mark pending
+- `GET /api/packs/:id` returns pending/ready + fake download URL
+
+Example curl:
+
+```bash
+curl -X POST http://localhost:3000/api/requests \
+  -H "Content-Type: application/json" \
+  -d '{"buyerId":"buyer-1","factoryId":"factory-1","docType":"Certificate","dueDate":"2025-02-15"}'
+
+curl -X POST http://localhost:3000/api/requests/<id>/fulfill \
+  -H "Content-Type: application/json" \
+  -d '{"evidenceId":"1","versionIds":["v1","v2"]}'
+
+curl "http://localhost:3000/api/buyer/evidence/1?buyerId=buyer-1"
+
+curl -X POST http://localhost:3000/api/packs \
+  -H "Content-Type: application/json" \
+  -d '{"buyerId":"buyer-1","items":[{"evidenceId":"1","versionIds":["v2","v3"]}]}'
+```
+
 ## Styling & Theme
 
 - `app/globals.css` imports Tailwind + custom themes (light/dark palettes, `@theme` variables) and applies `Geist` fonts from `next/font`.
